@@ -1,0 +1,34 @@
+# kube-prometheus-stack을 배포하는 Argo CD child Application입니다.
+# Argo CD는 GitLab의 wrapper Helm chart를 읽고, Chart.yaml dependency로 prometheus-community chart를 가져옵니다.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: http://gitlab.example.test/portfolio/gitlab-gitops.git
+    targetRevision: main
+    # GitLab 안에 있는 Helm wrapper chart 경로입니다.
+    path: k8s-gitops/addons/monitoring/kube-prometheus-stack
+    helm:
+      releaseName: kube-prometheus-stack
+      # chart values는 GitLab에서 관리합니다.
+      valueFiles:
+        - values.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+
+  syncPolicy:
+    automated:
+      # 모니터링 스택은 CRD/PVC 등 영향 범위가 커서 자동 prune을 꺼둔 상태입니다.
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      # 대형 chart와 CRD 관련 리소스 적용 안정성을 위해 server-side apply를 사용합니다.
+      - ServerSideApply=true

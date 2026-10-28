@@ -1,0 +1,16 @@
+# root Application이 바라보는 Kustomize 진입점입니다.
+# 여기에 등록된 YAML들이 Argo CD child Application으로 생성됩니다.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  # api-tester 애플리케이션은 Kustomize overlay(dev)를 배포합니다.
+  - api-tester-dev.yaml
+  # Prometheus/Grafana 모니터링 스택은 GitLab 안의 wrapper Helm chart로 배포합니다.
+  - kube-prometheus-stack.yaml
+  # Loki 로그 저장소도 GitLab 안의 wrapper Helm chart로 배포합니다.
+  - loki.yaml
+  # Alloy 로그 수집기도 GitLab 안의 wrapper Helm chart로 배포합니다.
+  - alloy.yaml
+  # nginx-gateway 배포
+  - nginx-gateway-config.yaml

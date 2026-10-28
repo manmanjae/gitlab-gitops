@@ -1,0 +1,39 @@
+# api-tester dev 환경을 배포하는 Argo CD child Application입니다.
+# 실제 Kubernetes manifest는 apps/api-tester/base를 기준으로 overlays/dev에서 namespace와 image tag를 입힙니다.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: api-tester-dev
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: http://gitlab.example.test/portfolio/gitlab-gitops.git
+    targetRevision: main
+    # Kustomize overlay 경로입니다. GitLab CI는 이 경로의 image newTag를 갱신합니다.
+    path: k8s-gitops/apps/api-tester/overlays/dev
+
+  destination:
+    server: https://kubernetes.default.svc
+    # api-tester 리소스가 실제로 배포될 namespace입니다.
+    namespace: app-dev
+
+  ignoreDifferences:
+    # HPA가 Deployment replica 수를 조절하므로 Argo CD가 /spec/replicas 차이를 drift로 보지 않게 합니다.
+    - group: apps
+      kind: Deployment
+      name: api-tester
+      namespace: app-dev
+      jsonPointers:
+        - /spec/replicas
+
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      # ignoreDifferences에 지정한 필드를 sync 때도 존중합니다.
+      - RespectIgnoreDifferences=true

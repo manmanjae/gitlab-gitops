@@ -1,0 +1,31 @@
+# Alloy를 배포하는 Argo CD child Application입니다.
+# Alloy는 Kubernetes Pod 로그를 수집해서 Loki로 보내는 로그 수집기 역할을 합니다.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: alloy
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: http://gitlab.example.test/portfolio/gitlab-gitops.git
+    targetRevision: main
+    # 이 경로의 Chart.yaml이 Grafana Alloy chart를 dependency로 선언합니다.
+    path: k8s-gitops/addons/logging/alloy
+    helm:
+      releaseName: alloy
+      valueFiles:
+        - values.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

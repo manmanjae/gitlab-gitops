@@ -1,0 +1,31 @@
+# Loki를 배포하는 Argo CD child Application입니다.
+# 외부 Helm repo를 직접 바라보지 않고, GitLab 안의 wrapper chart를 바라보도록 구성했습니다.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: http://gitlab.example.test/portfolio/gitlab-gitops.git
+    targetRevision: main
+    # 이 경로의 Chart.yaml이 grafana-community Loki chart를 dependency로 선언합니다.
+    path: k8s-gitops/addons/logging/loki
+    helm:
+      releaseName: loki
+      valueFiles:
+        - values.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
