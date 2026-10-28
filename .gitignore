@@ -1,0 +1,23 @@
+# Local credentials and generated artifacts
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.kubeconfig
+kubeconfig
+credentials/
+private/
+*secret*.yaml
+*secret*.yml
+!*secret*.example.yaml
+!*secret*.example.yml
+charts/
+rendered/
+*.log
+*.zip
+.DS_Store
+Thumbs.db
+__pycache__/
