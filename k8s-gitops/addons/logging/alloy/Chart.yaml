@@ -1,0 +1,11 @@
+# Alloy wrapper chart입니다.
+# Argo CD Application은 GitLab의 이 경로를 바라보고, 실제 Alloy chart는 dependency로 가져옵니다.
+apiVersion: v2
+name: alloy-wrapper
+description: GitOps wrapper chart for alloy
+type: application
+version: 0.1.0
+dependencies:
+  - name: alloy
+    version: 1.10.0
+    repository: https://grafana.github.io/helm-charts

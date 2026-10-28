@@ -1,0 +1,65 @@
+# Alloy dependency chart에 전달되는 values입니다.
+# wrapper chart 구조라서 실제 Alloy chart 설정은 alloy: 아래에 위치합니다.
+alloy:
+  # 모든 노드의 Pod 로그를 수집하기 위해 DaemonSet으로 실행합니다.
+  controller:
+    type: daemonset
+
+  alloy:
+    configMap:
+      create: true
+      # 아래 content는 Alloy River 설정입니다. YAML 주석이 아니라 실제 설정 문자열로 전달됩니다.
+      content: |-
+        logging {
+          level  = "info"
+          format = "logfmt"
+        }
+
+        discovery.kubernetes "pods" {
+          role = "pod"
+        }
+
+        discovery.relabel "pod_logs" {
+          targets = discovery.kubernetes.pods.targets
+
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label  = "namespace"
+          }
+
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label  = "pod"
+          }
+
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label  = "container"
+          }
+
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            target_label  = "node"
+          }
+
+          rule {
+            source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+            separator     = "/"
+            target_label  = "job"
+          }
+        }
+
+        loki.source.kubernetes "pod_logs" {
+          targets    = discovery.relabel.pod_logs.output
+          forward_to = [loki.process.pod_logs.receiver]
+        }
+
+        loki.process "pod_logs" {
+          forward_to = [loki.write.default.receiver]
+        }
+
+        loki.write "default" {
+          endpoint {
+            url = "http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push"
+          }
+        }
