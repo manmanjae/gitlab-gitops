@@ -1,0 +1,11 @@
+# Loki wrapper chart입니다.
+# Argo CD Application은 GitLab의 이 경로를 바라보고, 실제 Loki chart는 dependency로 가져옵니다.
+apiVersion: v2
+name: loki-wrapper
+description: GitOps wrapper chart for loki
+type: application
+version: 0.1.0
+dependencies:
+  - name: loki
+    version: 17.4.9
+    repository: https://grafana-community.github.io/helm-charts
