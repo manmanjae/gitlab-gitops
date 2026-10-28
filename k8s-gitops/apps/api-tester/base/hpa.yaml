@@ -1,0 +1,46 @@
+# api-tester Deployment를 CPU 사용률 기준으로 자동 확장하는 HPA입니다.
+# Deployment replicas 대신 이 파일의 minReplicas/maxReplicas가 Pod 개수 범위를 결정합니다.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-tester
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-tester
+
+  # 평상시 최소 2개 Pod를 유지하고, 부하 시 최대 5개까지 늘립니다.
+  minReplicas: 2
+  maxReplicas: 5
+
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          # Pod들의 평균 CPU 사용률이 request 대비 60%를 넘으면 scale up 판단에 들어갑니다.
+          averageUtilization: 60
+
+  behavior:
+    scaleUp:
+      # 짧은 순간 튀는 부하에 너무 즉시 반응하지 않도록 60초 안정화 창을 둡니다.
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 60
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+      selectPolicy: Max
+
+    scaleDown:
+      # scale down은 더 보수적으로 해서 부하가 빠진 직후 Pod가 바로 줄지 않게 합니다.
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+      selectPolicy: Max

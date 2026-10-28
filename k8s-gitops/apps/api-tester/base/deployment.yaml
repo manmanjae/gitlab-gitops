@@ -1,0 +1,69 @@
+# api-tester Deployment.
+# HPA owns the replica count, so spec.replicas is intentionally omitted.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-tester
+  labels:
+    app: api-tester
+    app.kubernetes.io/name: api-tester
+    app.kubernetes.io/component: web
+    app.kubernetes.io/part-of: cicd-demo
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: api-tester
+  template:
+    metadata:
+      labels:
+        app: api-tester
+        app.kubernetes.io/name: api-tester
+        app.kubernetes.io/component: web
+        app.kubernetes.io/part-of: cicd-demo
+    spec:
+      imagePullSecrets:
+        - name: harbor-regcred
+      containers:
+        - name: api-tester
+          image: harbor.example.test/dev/api-tester
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            failureThreshold: 30
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 2
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false

@@ -1,0 +1,22 @@
+# HTTP Ingress for the api-tester dev endpoint.
+# TLS is intentionally not configured for this lab environment.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-tester
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: api-tester-dev.example.test
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-tester
+                port:
+                  number: 80
