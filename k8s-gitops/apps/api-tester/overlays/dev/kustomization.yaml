@@ -1,0 +1,13 @@
+# api-tester dev 환경 overlay입니다.
+# base manifest를 가져온 뒤 namespace와 image tag만 dev 환경 기준으로 지정합니다.
+namespace: app-dev
+
+resources:
+  - ../../base
+  - namespace.yaml
+  - httproute.yaml
+
+images:
+  # GitLab CI의 update-gitops 단계가 newTag 값을 새 Harbor 이미지 태그로 갱신합니다.
+  - name: harbor.example.test/dev/api-tester
+    newTag: image98

@@ -1,0 +1,41 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: api-tester
+  namespace: app-dev
+  annotations:
+    link.argocd.argoproj.io/api-tester: "http://api-tester-dev.example.test/"
+spec:
+  parentRefs:
+    - name: cicd-gateway
+      namespace: nginx-gateway
+      sectionName: http
+
+  hostnames:
+    - "api-tester-dev.example.test"
+
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: api-tester
+          port: 80
+          weight: 1
+---
+apiVersion: gateway.nginx.org/v1alpha1
+kind: ProxySettingsPolicy
+metadata:
+  name: api-tester-timeouts
+  namespace: app-dev
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: api-tester
+  timeout:
+    read: "60s"
+    send: "60s"
