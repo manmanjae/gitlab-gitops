@@ -1,0 +1,14 @@
+# kube-prometheus-stack wrapper chart입니다.
+# Argo CD는 GitLab의 이 chart를 읽고, dependency로 실제 prometheus-community chart를 내려받습니다.
+apiVersion: v2
+name: kube-prometheus-stack-gitops
+description: GitOps wrapper chart for kube-prometheus-stack.
+type: application
+version: 0.1.0
+appVersion: "86.1.0"
+
+dependencies:
+  - name: kube-prometheus-stack
+    version: 86.1.0
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: kube-prometheus-stack.enabled

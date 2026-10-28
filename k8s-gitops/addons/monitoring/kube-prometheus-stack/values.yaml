@@ -1,0 +1,60 @@
+# kube-prometheus-stack dependency chart에 전달되는 values입니다.
+# wrapper chart 구조라서 실제 설정은 kube-prometheus-stack: 아래에 위치합니다.
+kube-prometheus-stack:
+  enabled: true
+  fullnameOverride: kube-prometheus-stack
+
+  grafana:
+    enabled: true
+    # OpenEBS hostpath PVC에서 init chown 컨테이너가 권한 오류를 내던 문제를 피하기 위해 비활성화했습니다.
+    initChownData:
+      enabled: false
+    adminUser: admin
+    admin:
+      # Grafana 관리자 비밀번호는 Secret에서 읽습니다. Git에는 직접 저장하지 않습니다.
+      existingSecret: kube-prometheus-stack-grafana
+      userKey: admin-user
+      passwordKey: admin-password
+
+    persistence:
+      enabled: true
+      type: pvc
+      storageClassName: openebs-hostpath
+      accessModes:
+        - ReadWriteOnce
+      size: 5Gi
+
+  prometheus:
+    prometheusSpec:
+      retention: 7d
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: openebs-hostpath
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 20Gi
+
+  alertmanager:
+    alertmanagerSpec:
+      storage:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: openebs-hostpath
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 5Gi
+
+  # 단일 노드/간단한 테스트 환경에서 kube-system control plane endpoint가 없을 수 있어 비활성화했습니다.
+  kubeEtcd:
+    enabled: false
+
+  kubeControllerManager:
+    enabled: false
+
+  kubeScheduler:
+    enabled: false
